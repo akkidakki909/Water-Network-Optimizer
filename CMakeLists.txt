@@ -9,6 +9,7 @@ add_library(water_core
     src/dinic.cpp
     src/min_cost_flow.cpp
     src/network_builder.cpp
+    src/demand_forecast.cpp
 )
 target_include_directories(water_core PUBLIC include)
 
@@ -19,3 +20,7 @@ add_executable(water_optimizer_tests tests/test_main.cpp)
 target_link_libraries(water_optimizer_tests PRIVATE water_core)
 enable_testing()
 add_test(NAME water_optimizer_tests COMMAND water_optimizer_tests)
+
+add_executable(demand_forecast_tests tests/test_demand_forecast.cpp)
+target_link_libraries(demand_forecast_tests PRIVATE water_core)
+add_test(NAME demand_forecast_tests COMMAND demand_forecast_tests)

@@ -1,70 +1,95 @@
-# Water & Resource Distribution Network Optimizer — Week 1 (C++)
+# Water & Resource Distribution Network Optimizer — Week 2 (C++17)
 
-This is the **C++17** version of the Week 1 DSA engine. The focus stays on graph algorithms; AI/ML can be added later as a separate demand-forecasting feature.
+Week 2 extends the C++ DSA engine with a demand-forecasting feature. Graph algorithms remain the core; forecasting estimates destination demand and passes the rounded estimate into the network optimizer.
 
-## Structure
+## Project structure
 
 ```text
-Water_Network_Optimizer_CPP_Week1/
-├── include/
-│   ├── flow_network.hpp
-│   ├── dinic.hpp
-│   ├── min_cost_flow.hpp
-│   └── network_builder.hpp
-├── src/
-│   ├── flow_network.cpp
-│   ├── dinic.cpp
-│   ├── min_cost_flow.cpp
-│   ├── network_builder.cpp
-│   └── main.cpp
-├── tests/
-│   └── test_main.cpp
+Water_Network_Optimizer_CPP_Week2/
+├── include/       # graph, max-flow, min-cost flow, and forecasting headers
+├── src/           # C++ implementations and demo main.cpp
+├── tests/         # graph algorithm tests and demand forecasting tests
 ├── CMakeLists.txt
 └── README.md
 ```
 
 ## Requirements
 
-- A C++17 compiler: GCC/g++, Clang, or MSVC.
-- No external libraries are required.
+- A C++17 compiler such as MinGW-w64 `g++`, `clang++`, or Visual Studio C++ tools.
+- No third-party libraries are required.
 
-## Build and run (g++)
+Check that `g++` is installed:
 
-Open a terminal in this folder:
+```bash
+g++ --version
+```
+
+## How to run on Windows (VS Code)
+
+1. Extract the ZIP.
+2. Open the extracted `Water_Network_Optimizer_CPP_Week2` folder in VS Code.
+3. Select **Terminal → New Terminal**. Run commands from the project root (the folder containing `README.md`, `include`, `src`, and `tests`).
+4. Compile the demo:
+
+```powershell
+g++ -std=c++17 -Wall -Wextra -pedantic -Iinclude src/*.cpp -o water_optimizer.exe
+```
+
+5. Run it:
+
+```powershell
+.\water_optimizer.exe
+```
+
+The demo predicts demand for two zones from sample history, then runs Dinic maximum-flow and min-cost max-flow using the forecasts as destination demand limits.
+
+## How to run on Linux/macOS
+
+From the project root:
 
 ```bash
 g++ -std=c++17 -Wall -Wextra -pedantic -Iinclude src/*.cpp -o water_optimizer
 ./water_optimizer
 ```
 
-On Windows Command Prompt, run the executable with:
-
-```bat
-water_optimizer.exe
-```
-
 ## Run tests
 
-Compile the test file separately from `src/main.cpp`:
+Compile and run the graph algorithm tests separately (do not include `src/main.cpp`):
 
-```bash
-g++ -std=c++17 -Wall -Wextra -pedantic -Iinclude src/flow_network.cpp src/dinic.cpp src/min_cost_flow.cpp src/network_builder.cpp tests/test_main.cpp -o water_optimizer_tests
+**Windows PowerShell**
+```powershell
+g++ -std=c++17 -Wall -Wextra -pedantic -Iinclude src/flow_network.cpp src/dinic.cpp src/min_cost_flow.cpp src/network_builder.cpp tests/test_main.cpp -o water_tests.exe
+.\water_tests.exe
 ```
 
-Then run `water_optimizer_tests` (or `water_optimizer_tests.exe` on Windows). The tests use simple assertions and need no testing framework.
+Compile and run the Week 2 forecasting tests:
 
-## Algorithms included
+```powershell
+g++ -std=c++17 -Wall -Wextra -pedantic -Iinclude src/demand_forecast.cpp tests/test_demand_forecast.cpp -o forecast_tests.exe
+.\forecast_tests.exe
+```
 
-- **Adjacency list + residual edges:** every forward edge has a paired reverse edge.
-- **Dinic max-flow:** BFS level graph, DFS blocking flow, current-arc optimization.
-- **Min-cost max-flow:** Bellman-Ford initial potentials, then Dijkstra using `std::priority_queue` and reduced costs.
-- **Multiple sources and destinations:** super-source and super-sink reduction.
-- **Pipe usage reporting:** original pipe edges are tagged and their final flow can be inspected.
+On Linux/macOS, use the same compile commands but omit `.exe` from output names and run with `./water_tests` and `./forecast_tests`.
 
-## Important notes
+Expected messages: `All 4 C++ tests passed.` and `All 4 demand forecasting tests passed.`
 
-- Build a fresh network for each independent algorithm run because flow algorithms mutate residual capacities.
-- Max-flow maximizes delivered quantity; it does not minimize cost.
-- Min-cost max-flow first sends as much flow as possible, then minimizes cost for that amount.
-- Costs/capacities are integers. This is a graph model for the course project, not a hydraulic simulation.
-- The initial input network should not contain a reachable negative-cost cycle.
+## Optional CMake build
+
+```bash
+cmake -S . -B build
+cmake --build build
+ctest --test-dir build --output-on-failure
+```
+
+## Week 2 feature: demand forecasting
+
+`demand_forecast.cpp` implements least-squares linear regression over `(time_step, demand)` observations. It returns the predicted demand, fitted slope/intercept, and a rounded non-negative integer demand limit for the graph optimizer. The included observations are synthetic examples.
+
+This is an interpretable forecasting **baseline**, not a Random Forest or production-grade model. In a later iteration, it can be compared with a richer model using realistic historical demand and prediction-error metrics. The core DSA remains adjacency-list graph representation, Dinic max-flow, min-cost max-flow, residual edges, and super-source/super-sink reduction.
+
+## Notes
+
+- Flow algorithms mutate residual capacities, so the demo builds a fresh network for each independent run.
+- Maximum flow maximizes quantity; min-cost max-flow minimizes cost for the maximum flow it can send.
+- Capacities and costs are integer units. This is a graph model, not a physical hydraulic simulation.
+- The min-cost flow implementation assumes no reachable negative-cost cycle in the initial network.
